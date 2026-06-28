@@ -18,7 +18,16 @@ const ICONS = {
   arrowRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
   up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
   down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 7 9 13 13 9 21 17"/><polyline points="15 17 21 17 21 11"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M5 12H2M22 12h-3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.8"/><line x1="12" y1="17.5" x2="12" y2="17.5"/></svg>',
 };
+
+// Accessible info tooltip: hover + keyboard focus, label announced via aria-label.
+function infoTip(label, text) {
+  if (!text) return "";
+  return `<span class="tip" tabindex="0" role="img" aria-label="${label}: ${text}">${ICONS.info}<span class="tip-bubble" aria-hidden="true">${text}</span></span>`;
+}
 
 const el = (html) => {
   const t = document.createElement("template");
@@ -208,13 +217,23 @@ function renderDashboard(mount) {
   const d = AthericData;
   const s = d.stock;
 
+  const g = d.glossary || {};
   const statCells = (arr) =>
-    arr.map((st) => `<div class="stat"><div class="stat-label">${st.label}</div><div class="stat-value">${st.value}</div></div>`).join("");
+    arr
+      .map(
+        (st) =>
+          `<div class="stat"><div class="stat-label">${st.label}${infoTip(st.label, g[st.label])}</div><div class="stat-value">${st.value}</div></div>`
+      )
+      .join("");
 
   const stockHead = `<div class="stock-head">
     <div class="stock-mark">${s.initial}</div>
     <div class="stock-id">
       <div class="stock-row"><span class="stock-ticker">${s.ticker}</span><span class="stock-name">${s.name}</span></div>
+    </div>
+    <div class="stock-actions">
+      <button class="stock-btn" aria-label="Add ${s.ticker} to watchlist">${ICONS.plus}<span>Add to Watchlist</span></button>
+      <button class="stock-btn primary" aria-label="Explain ${s.ticker} in plain language">${ICONS.spark}<span>Explain this stock</span></button>
     </div>
     <div class="stock-stats">
       ${statCells(s.ohlc)}
@@ -234,7 +253,7 @@ function renderDashboard(mount) {
       <div class="legend">
         <span class="legend-item"><span class="legend-line"></span>Actual</span>
         <span class="legend-item"><span class="legend-line dashed"></span>Forecast</span>
-        <span class="legend-item"><span class="legend-swatch"></span>90% CI</span>
+        <span class="legend-item"><span class="legend-swatch"></span>90% CI${infoTip("90% CI", (d.glossary || {})["90% CI"])}</span>
       </div>
       <div class="range-toggle">
         ${f.ranges.map((r) => `<button class="range-btn${r === f.activeRange ? " active" : ""}">${r}</button>`).join("")}
@@ -251,6 +270,12 @@ function renderDashboard(mount) {
     <div class="target-price-row"><span class="target-price">${t.price}</span><span class="target-upside">${t.upside}</span></div>
     <div class="slider-track"><span class="slider-thumb" style="left:${t.sliderPct}%"></span></div>
     <div class="slider-ends"><span>Bear</span><span>Bull</span></div>
+    <div class="target-stats">
+      ${t.stats
+        .map((st) => `<div class="target-stat"><span class="target-stat-label">${st.label}</span><span class="target-stat-value">${st.value}</span></div>`)
+        .join("")}
+    </div>
+    <div class="target-disclaimer">${t.disclaimer}</div>
   </section>`;
 
   const se = d.sentiment;
@@ -263,6 +288,8 @@ function renderDashboard(mount) {
           (i) => `<div class="gauge-cell">
             ${buildGauge(i.value, toneColor[i.tone])}
             <div class="gauge-cell-label">${i.label}</div>
+            <div class="sent-scale">${i.value}/100 · <span class="sent-verdict">${i.verdict}</span></div>
+            <div class="sent-source">${i.source}</div>
           </div>`
         )
         .join("")}
@@ -326,12 +353,14 @@ function renderDashboard(mount) {
     el(`<div class="content">
       ${stockHead}
       <div class="dash-grid">
-        <div class="dash-col">${forecastCard}</div>
+        <div class="dash-col">
+          ${forecastCard}
+          ${moversCard}
+        </div>
         <div class="dash-col">
           ${targetCard}
           ${sentCard}
           ${kvCard}
-          ${moversCard}
         </div>
         <div class="dash-bottom">${synthCard}${newsCard}</div>
       </div>

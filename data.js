@@ -84,6 +84,19 @@ const AthericData = {
     rec: "BUY",
     upside: "+12.8% Potential Upside",
     sliderPct: 86,
+    stats: [
+      { label: "Stop-Loss", value: "$790.00" },
+      { label: "Risk / Reward", value: "1 : 2.4" },
+      { label: "Confidence", value: "88%" },
+    ],
+    disclaimer: "For research only — not financial advice.",
+  },
+
+  glossary: {
+    "P/E": "How expensive the stock is versus its yearly earnings — higher means pricier.",
+    EPS: "Company profit for each share over the past year.",
+    "Div Yield": "Yearly dividend paid out as a percent of the share price.",
+    "90% CI": "The model expects the price to land inside this band about 9 times out of 10.",
   },
 
   confidence: { title: "Confidence Score", value: 94 },
@@ -110,8 +123,8 @@ const AthericData = {
   sentiment: {
     title: "Sentiment",
     items: [
-      { label: "Local", value: 82, tone: "green" },
-      { label: "Global", value: 75, tone: "cyan" },
+      { label: "Local", value: 82, tone: "green", verdict: "Bullish", source: "Index trend, net buy flow" },
+      { label: "Global", value: 75, tone: "cyan", verdict: "Bullish", source: "Fed stance, DXY" },
     ],
   },
 
