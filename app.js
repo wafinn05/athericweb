@@ -91,70 +91,101 @@ function renderTopbar(variant) {
 }
 
 /* ---------------- Forecast chart (computed from data) ---------------- */
-function buildChart(f) {
-  const W = 1000, H = 460;
-  const pad = { l: 54, r: 28, t: 18, b: 38 };
-  const iw = W - pad.l - pad.r;
-  const ih = H - pad.t - pad.b;
-  const n = f.actual.length + f.forecast.length - 1; // shared split point
-  const xAt = (i) => pad.l + (iw * i) / (n);
-  const yAt = (v) => pad.t + ih * (1 - (v - f.yMin) / (f.yMax - f.yMin));
+const money = (v) => "$" + Number(v).toLocaleString("en-US");
 
-  const splitX = xAt(f.actual.length - 1);
+// Shared chart geometry so the price chart and volume panel stay aligned.
+const CHART = { W: 1000, l: 56, r: 100 };
+const chartX = (f, i) => {
+  const iw = CHART.W - CHART.l - CHART.r;
+  const n = f.actual.length + f.forecast.length - 1;
+  return CHART.l + (iw * i) / n;
+};
+
+function buildChart(f) {
+  const { W, l, r } = CHART;
+  const H = 380;
+  const pad = { l, r, t: 18, b: 30 };
+  const ih = H - pad.t - pad.b;
+  const off = f.actual.length - 1;
+  const xAt = (i) => chartX(f, i);
+  const yAt = (v) => pad.t + ih * (1 - (v - f.yMin) / (f.yMax - f.yMin));
+  const splitX = xAt(off);
 
   const linePath = (vals, offset) =>
     vals.map((v, i) => `${i === 0 ? "M" : "L"} ${xAt(i + offset).toFixed(1)} ${yAt(v).toFixed(1)}`).join(" ");
 
-  const off = f.actual.length - 1;
   const ciArea =
-    f.ciUpper.map((v, i) => `${i === 0 ? "M" : "L"} ${xAt(i + off).toFixed(1)} ${yAt(v).toFixed(1)}`).join(" ") +
-    " " +
-    f.ciLower.slice().reverse().map((v, i) => `L ${xAt(f.ciLower.length - 1 - i + off).toFixed(1)} ${yAt(v).toFixed(1)}`).join(" ") +
-    " Z";
+    f.ciUpper.map((v, i) => `${i === 0 ? "M" : "L"} ${xAt(i + off).toFixed(1)} ${yAt(v).toFixed(1)}`).join(" ") + " " +
+    f.ciLower.slice().reverse().map((v, i) => `L ${xAt(f.ciLower.length - 1 - i + off).toFixed(1)} ${yAt(v).toFixed(1)}`).join(" ") + " Z";
 
   const gridY = f.yTicks
     .map(
       (t) =>
-        `<line x1="${pad.l}" y1="${yAt(t).toFixed(1)}" x2="${W - pad.r}" y2="${yAt(t).toFixed(1)}" class="grid-line"/>
-         <text x="${pad.l - 12}" y="${(yAt(t) + 4).toFixed(1)}" class="axis-y">${t}</text>`
+        `<line x1="${pad.l}" y1="${yAt(t).toFixed(1)}" x2="${(W - pad.r).toFixed(1)}" y2="${yAt(t).toFixed(1)}" class="grid-line"/>
+         <text x="${pad.l - 12}" y="${(yAt(t) + 4).toFixed(1)}" class="axis-y">${money(t)}</text>`
     )
     .join("");
 
   const xLabels = f.xLabels
     .map((lab, i) => {
+      const iw = W - pad.l - pad.r;
       const x = pad.l + (iw * i) / (f.xLabels.length - 1);
       const today = lab === "Today";
-      return `<text x="${x.toFixed(1)}" y="${H - 12}" class="axis-x${today ? " axis-x--today" : ""}" text-anchor="middle">${lab}</text>`;
+      return `<text x="${x.toFixed(1)}" y="${(H - 9).toFixed(1)}" class="axis-x${today ? " axis-x--today" : ""}" text-anchor="middle">${lab}</text>`;
     })
     .join("");
 
-  const lastActualX = xAt(off);
-  const lastActualY = yAt(f.actual[f.actual.length - 1]);
-  const dotX = xAt(off - 1);
-  const dotY = yAt(f.actual[f.actual.length - 2]);
+  const edgeX = xAt(off + f.forecast.length - 1);
+  const scen = f.scenarios
+    .map((s) => {
+      const y = yAt(s.value);
+      return `<line x1="${edgeX.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(W - pad.r + 6).toFixed(1)}" y2="${y.toFixed(1)}" class="scen-tick scen-${s.key}"/>
+        <circle cx="${edgeX.toFixed(1)}" cy="${y.toFixed(1)}" r="3" class="scen-dot scen-${s.key}"/>
+        <text x="${(W - pad.r + 10).toFixed(1)}" y="${(y + 3.5).toFixed(1)}" class="scen-label scen-${s.key}">${s.label} ${money(s.value)}</text>`;
+    })
+    .join("");
 
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+  const lastActualX = xAt(off), lastActualY = yAt(f.actual[off]);
+
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${f.title}: actual price and forecast range">
     <defs>
       <linearGradient id="ciGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#28d2e6" stop-opacity="0.30"/>
-        <stop offset="100%" stop-color="#28d2e6" stop-opacity="0.02"/>
+        <stop offset="0%" stop-color="#28d2e6" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#28d2e6" stop-opacity="0"/>
       </linearGradient>
     </defs>
-    <style>
-      .grid-line { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
-      .axis-y { fill: #586074; font-size: 13px; text-anchor: end; }
-      .axis-x { fill: #586074; font-size: 13px; }
-      .axis-x--today { fill: #4f7dff; font-weight: 600; }
-    </style>
     ${gridY}
-    <path d="${ciArea}" fill="url(#ciGrad)" />
-    <line x1="${splitX.toFixed(1)}" y1="${pad.t}" x2="${splitX.toFixed(1)}" y2="${H - pad.b}" stroke="rgba(255,255,255,0.14)" stroke-width="1" stroke-dasharray="3 4"/>
-    <text x="${splitX.toFixed(1)}" y="${pad.t - 4}" fill="#586074" font-size="12" text-anchor="middle">Forecast Start</text>
-    <path d="${linePath(f.actual, 0)}" fill="none" stroke="#3b6ef6" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="${linePath(f.forecast, off)}" fill="none" stroke="#28d2e6" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 9"/>
-    <circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="5" fill="#3b6ef6" stroke="#0a0e17" stroke-width="2"/>
+    <path d="${ciArea}" fill="url(#ciGrad)"/>
+    <line x1="${splitX.toFixed(1)}" y1="${pad.t}" x2="${splitX.toFixed(1)}" y2="${(H - pad.b).toFixed(1)}" class="split-line"/>
+    <text x="${splitX.toFixed(1)}" y="${(pad.t - 5).toFixed(1)}" class="split-label" text-anchor="middle">Forecast Start</text>
+    <path d="${linePath(f.actual, 0)}" fill="none" stroke="#3b6ef6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${linePath(f.forecast, off)}" fill="none" stroke="#28d2e6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 8"/>
     <circle cx="${lastActualX.toFixed(1)}" cy="${lastActualY.toFixed(1)}" r="4" fill="#28d2e6"/>
+    ${scen}
     ${xLabels}
+  </svg>`;
+}
+
+/* ---------------- Volume sub-panel (aligned to price chart) ---------------- */
+function buildVolume(f) {
+  const { W, l, r } = CHART;
+  const H = 96;
+  const pad = { t: 16, b: 14 };
+  const max = Math.max(...f.volume.map((v) => v.v));
+  const bw = Math.max(6, ((W - l - r) / (f.actual.length + f.forecast.length - 1)) * 0.5);
+
+  const bars = f.volume
+    .map((v, i) => {
+      const h = (v.v / max) * (H - pad.t - pad.b);
+      const x = chartX(f, i) - bw / 2;
+      const y = H - pad.b - h;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" class="vol-bar vol-${v.dir}"/>`;
+    })
+    .join("");
+
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Trading volume">
+    <text x="${l - 12}" y="${(pad.t + 2).toFixed(1)}" class="axis-y">Vol</text>
+    ${bars}
   </svg>`;
 }
 
@@ -209,7 +240,9 @@ function renderDashboard(mount) {
         ${f.ranges.map((r) => `<button class="range-btn${r === f.activeRange ? " active" : ""}">${r}</button>`).join("")}
       </div>
     </div>
+    <div class="chart-caption">${f.caption}</div>
     <div class="chart-wrap">${buildChart(f)}</div>
+    <div class="volume-wrap">${buildVolume(f)}</div>
   </section>`;
 
   const t = d.target;
@@ -251,6 +284,31 @@ function renderDashboard(mount) {
     </div>
   </section>`;
 
+  const kl = d.keyLevels;
+  const kvCard = `<section class="card kv-card">
+    <div class="card-title">${kl.title}</div>
+    <div class="kv-list">
+      ${kl.items
+        .map((i) => `<div class="kv-row"><span class="kv-label">${i.label}</span><span class="kv-val ${i.tone}">${i.value}</span></div>`)
+        .join("")}
+    </div>
+  </section>`;
+
+  const mv = d.topMovers;
+  const moversCard = `<section class="card movers-card">
+    <div class="card-title">${mv.title}</div>
+    <div class="movers-list">
+      ${mv.items
+        .map(
+          (i) => `<div class="mv-row">
+            <span class="mv-id"><span class="mv-ticker">${i.ticker}</span><span class="mv-name">${i.name}</span></span>
+            <span class="mv-change ${i.dir}">${i.change}</span>
+          </div>`
+        )
+        .join("")}
+    </div>
+  </section>`;
+
   const nw = d.news;
   const newsCard = `<section class="card panel-card">
     <div class="news-head"><span class="card-title">${nw.title}</span><span class="live-dot"></span></div>
@@ -272,6 +330,8 @@ function renderDashboard(mount) {
         <div class="dash-col">
           ${targetCard}
           ${sentCard}
+          ${kvCard}
+          ${moversCard}
         </div>
         <div class="dash-bottom">${synthCard}${newsCard}</div>
       </div>

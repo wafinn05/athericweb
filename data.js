@@ -54,17 +54,28 @@ const AthericData = {
 
   forecast: {
     title: "Generative AI Forecast Model",
+    caption: "Range of outcomes, not a guarantee.",
     ranges: ["1D", "1W", "1M", "3M", "1Y"],
     activeRange: "3M",
-    yTicks: [1000, 940, 880, 820, 760],
-    yMin: 760,
-    yMax: 1000,
-    xLabels: ["Jan", "Feb", "Mar", "Today", "Apr", "M"],
-    splitIndex: 6, // data index where forecast begins
+    yMin: 780,
+    yMax: 1040,
+    yTicks: [1040, 980, 920, 860, 800],
+    xLabels: ["Jan", "Feb", "Mar", "Today", "Apr", "May"],
     actual: [805, 800, 818, 855, 838, 832, 858, 870, 882, 885],
-    forecast: [885, 893, 900, 906, 911, 915],
-    ciUpper: [885, 905, 922, 936, 948, 958],
-    ciLower: [885, 868, 852, 840, 832, 826],
+    forecast: [885, 900, 915, 928, 940, 950],
+    ciUpper: [885, 918, 948, 975, 998, 1020],
+    ciLower: [885, 872, 860, 866, 873, 880],
+    scenarios: [
+      { key: "bull", label: "Bull", value: 1020 },
+      { key: "base", label: "Base", value: 950 },
+      { key: "bear", label: "Bear", value: 880 },
+    ],
+    volume: [
+      { v: 42, dir: "up" }, { v: 36, dir: "down" }, { v: 58, dir: "up" },
+      { v: 84, dir: "up" }, { v: 50, dir: "down" }, { v: 44, dir: "down" },
+      { v: 72, dir: "up" }, { v: 64, dir: "up" }, { v: 90, dir: "up" },
+      { v: 78, dir: "up" },
+    ],
   },
 
   target: {
@@ -76,6 +87,25 @@ const AthericData = {
   },
 
   confidence: { title: "Confidence Score", value: 94 },
+
+  keyLevels: {
+    title: "Key Levels",
+    items: [
+      { label: "Resistance", value: "$900.00", tone: "up" },
+      { label: "Current", value: "$842.12", tone: "flat" },
+      { label: "Support", value: "$820.00", tone: "down" },
+    ],
+  },
+
+  topMovers: {
+    title: "Top Movers",
+    items: [
+      { ticker: "PLTR", name: "Palantir", change: "+4.2%", dir: "up" },
+      { ticker: "AMD", name: "Adv. Micro", change: "+3.1%", dir: "up" },
+      { ticker: "MSFT", name: "Microsoft", change: "+1.4%", dir: "up" },
+      { ticker: "TSLA", name: "Tesla", change: "-2.1%", dir: "down" },
+    ],
+  },
 
   sentiment: {
     title: "Sentiment",

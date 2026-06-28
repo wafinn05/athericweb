@@ -216,8 +216,33 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   color: var(--text-dim);
 }
 .range-btn.active { background: #2a344c; color: var(--text); }
-.chart-wrap { flex: 1; min-height: 300px; }
+.chart-caption { font-size: 11.5px; color: var(--text-mute); margin: 0 0 6px; }
+.chart-wrap { flex: 1; min-height: 430px; }
 .chart-wrap svg { width: 100%; height: 100%; }
+.volume-wrap { height: 84px; margin-top: 4px; }
+.volume-wrap svg { width: 100%; height: 100%; }
+
+/* chart primitives (styled globally now, not via inline <style>) */
+.grid-line { stroke: rgba(255, 255, 255, 0.05); stroke-width: 1; }
+.axis-y { fill: var(--text-mute); font-size: 12px; text-anchor: end; font-variant-numeric: tabular-nums; }
+.axis-x { fill: var(--text-mute); font-size: 12px; }
+.axis-x--today { fill: var(--blue-bright); font-weight: 600; }
+.split-line { stroke: rgba(255, 255, 255, 0.14); stroke-width: 1; stroke-dasharray: 3 4; }
+.split-label { fill: var(--text-mute); font-size: 11px; }
+.scen-label { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.scen-bull .scen-label, .scen-bull.scen-label { fill: var(--green-bright); }
+.scen-base .scen-label, .scen-base.scen-label { fill: var(--cyan); }
+.scen-bear .scen-label, .scen-bear.scen-label { fill: var(--red); }
+.scen-bull.scen-dot, .scen-bull .scen-dot { fill: var(--green-bright); }
+.scen-base.scen-dot, .scen-base .scen-dot { fill: var(--cyan); }
+.scen-bear.scen-dot, .scen-bear .scen-dot { fill: var(--red); }
+.scen-tick { stroke-width: 1; stroke-dasharray: 2 3; }
+.scen-bull.scen-tick { stroke: var(--green-bright); }
+.scen-base.scen-tick { stroke: var(--cyan); }
+.scen-bear.scen-tick { stroke: var(--red); }
+.vol-bar { opacity: 0.7; }
+.vol-up { fill: var(--green); }
+.vol-down { fill: var(--red); }
 
 /* ---------------- Target / metrics ---------------- */
 .target-card { padding: 18px; }
@@ -253,6 +278,26 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .gauge-pair { display: flex; justify-content: space-around; gap: 18px; margin-top: 16px; }
 .gauge-cell { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .gauge-cell-label { font-size: 13px; color: var(--text-dim); font-weight: 600; }
+
+/* ---------------- Key Levels / Top Movers ---------------- */
+.kv-card, .movers-card { padding: 18px; }
+.kv-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.kv-row { display: flex; align-items: center; justify-content: space-between; }
+.kv-label { font-size: 12.5px; color: var(--text-dim); }
+.kv-val { font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kv-val.up { color: var(--green); }
+.kv-val.down { color: var(--red); }
+.kv-val.flat { color: var(--text); }
+
+.movers-list { display: flex; flex-direction: column; margin-top: 8px; }
+.mv-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--border); }
+.mv-row:first-child { border-top: none; }
+.mv-id { display: flex; align-items: baseline; gap: 8px; }
+.mv-ticker { font-size: 13px; font-weight: 700; }
+.mv-name { font-size: 11.5px; color: var(--text-mute); }
+.mv-change { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mv-change.up { color: var(--green); }
+.mv-change.down { color: var(--red); }
 
 /* ---------------- Synthesis / News ---------------- */
 .panel-card { padding: 18px 20px; }
