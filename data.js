@@ -134,16 +134,19 @@ const AthericData = {
       {
         heading: "Technical Breakout",
         tone: "blue",
+        status: "up",
         body: "Cleared $820 resistance on heavy volume. MACD and moving-average structure support continuation toward $900.",
       },
       {
         heading: "Fundamental Catalyst",
         tone: "green",
+        status: "up",
         body: "Q3 data-center revenue tracking ~15% above consensus on the Blackwell ramp and sustained hyperscaler capex.",
       },
       {
         heading: "Risk Factor",
         tone: "amber",
+        status: "warn",
         body: "Rate commentary next week may drive volatility; a 68x forward P/E leaves little room for demand misses.",
       },
     ],

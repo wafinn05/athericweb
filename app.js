@@ -21,6 +21,8 @@ const ICONS = {
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
   spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M5 12H2M22 12h-3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg>',
   info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.8"/><line x1="12" y1="17.5" x2="12" y2="17.5"/></svg>',
+  arrowUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="6"/><polyline points="6 12 12 6 18 12"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13.5"/><line x1="12" y1="17" x2="12" y2="17"/></svg>',
 };
 
 // Accessible info tooltip: hover + keyboard focus, label announced via aria-label.
@@ -28,6 +30,11 @@ function infoTip(label, text) {
   if (!text) return "";
   return `<span class="tip" tabindex="0" role="img" aria-label="${label}: ${text}">${ICONS.info}<span class="tip-bubble" aria-hidden="true">${text}</span></span>`;
 }
+
+// Current time as HH:MM for "Updated" liveness stamps.
+const nowHHMM = () =>
+  new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+const updatedStamp = () => `<span class="panel-updated">Updated ${nowHHMM()}</span>`;
 
 const el = (html) => {
   const t = document.createElement("template");
@@ -79,7 +86,7 @@ function renderTopbar(variant) {
     : d.indices
         .map(
           (i) =>
-            `<span class="index ${i.dir}"><span class="index-label">${i.label}</span><span class="index-value">${i.value}</span></span>`
+            `<span class="index ${i.dir}"><span class="index-label">${i.label}</span><span class="index-value live-tick">${i.value}</span></span>`
         )
         .join("");
 
@@ -259,7 +266,7 @@ function renderDashboard(mount) {
         ${f.ranges.map((r) => `<button class="range-btn${r === f.activeRange ? " active" : ""}">${r}</button>`).join("")}
       </div>
     </div>
-    <div class="chart-caption">${f.caption}</div>
+    <div class="chart-meta"><span class="chart-caption">${f.caption}</span>${updatedStamp()}</div>
     <div class="chart-wrap">${buildChart(f)}</div>
     <div class="volume-wrap">${buildVolume(f)}</div>
   </section>`;
@@ -303,7 +310,10 @@ function renderDashboard(mount) {
       ${sy.items
         .map(
           (i) => `<div class="synth-item tone-${i.tone}">
-            <div class="synth-item-head"><span class="synth-dot"></span><span class="synth-heading">${i.heading}</span></div>
+            <div class="synth-item-head">
+              <span class="synth-dot"></span><span class="synth-heading">${i.heading}</span>
+              <span class="synth-status status-${i.status}" aria-label="${i.status === "warn" ? "Caution" : "Positive"}">${i.status === "warn" ? ICONS.warn : ICONS.arrowUp}</span>
+            </div>
             <div class="synth-body">${(Array.isArray(i.body) ? i.body : [i.body]).map((p) => `<p>${p}</p>`).join("")}</div>
           </div>`
         )
@@ -338,7 +348,7 @@ function renderDashboard(mount) {
 
   const nw = d.news;
   const newsCard = `<section class="card panel-card">
-    <div class="news-head"><span class="card-title">${nw.title}</span><span class="live-dot"></span></div>
+    <div class="news-head"><span class="card-title">${nw.title}</span><span class="news-live">${updatedStamp()}<span class="live-dot"></span></span></div>
     ${nw.items
       .map(
         (i) => `<div class="news-item">
